@@ -1,0 +1,33 @@
+Name:             unixPoster
+Version:          0.1
+Synopsis:         A Unix poster showing the most important commands with examples
+Description:      The layout has been carefully adjusted to the content and the typical workflow when programming in bash
+category:         Graphics
+License:          BSD3
+License-file:     LICENSE
+Author:           Tillmann Vogt, Martin Bauch
+Maintainer:       Tillmann Vogt
+build-type:       Custom
+Cabal-Version:    >=1.10
+
+data-files:       img/*.png
+
+source-repository head
+  type: git
+  location: https://github.com/tkvogt/unix-poster.git
+
+Executable poster
+  main-is:        poster.hs
+  hs-source-dirs: .
+  other-modules:  Paths_unixPoster
+  build-depends:
+        base == 4.*,
+        containers == 0.4.*,
+        diagrams-core,
+        diagrams-lib,
+        diagrams-cairo,
+        diagrams >= 0.6,
+        SVGFonts >= 1.2,
+        colour,
+        highlighting-kate >= 0.5.5
+  default-language: Haskell2010
