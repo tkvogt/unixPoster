@@ -15,7 +15,7 @@ or go to the folder and
 cabal install
 ```
 builds an executable, and entering:
-
+```Shell
 ./poster -o unixposter.pdf -w 1685
-
+```
 produces [unixposter.pdf](unixposter.pdf)
