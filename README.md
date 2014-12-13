@@ -7,9 +7,13 @@ Haskell diagrams library instead of using a tool like Inkscape.
 
 Entering
 
-ghc --make poster.hs     or go to the folder and
+```Shell
+ghc --make poster.hs
+```
+or go to the folder and
+```Shell
 cabal install
-
+```
 builds an executable, and entering:
 
 ./poster -o unixposter.pdf -w 1685
