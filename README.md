@@ -13,4 +13,4 @@ builds an executable, and entering:
 
 ./poster -o unixposter.pdf -w 1685
 
-produces [unixposter.pdf!](unixposter.pdf)
+produces [unixposter.pdf](unixposter.pdf)
