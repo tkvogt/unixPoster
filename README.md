@@ -7,7 +7,8 @@ Haskell diagrams library instead of using a tool like Inkscape.
 
 Entering
 
-ghc --make poster.hs
+ghc --make poster.hs     or go to the folder and
+cabal install
 
 builds an executable, and entering:
 
