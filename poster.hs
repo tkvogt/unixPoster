@@ -1,4 +1,6 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
+-- {-# LANGUAGE TypeFamilies #-}
+
 -- to generate the poster:
 -- ghc --make poster.hs
 -- ./poster -o poster.pdf -w 1685 or
@@ -12,7 +14,7 @@ import Diagrams.Prelude
 import Diagrams.Backend.Cairo.CmdLine
 -- import Diagrams.Backend.SVG.CmdLine
 import Data.Word
-import Graphics.SVGFonts.ReadFont
+import Graphics.SVGFonts
 import qualified Diagrams.TwoD.Size as Size
 import Text.Highlighting.Kate
 import Data.Tree
@@ -24,7 +26,7 @@ main = do folderImg <- getDataFileName "img/folder.png"
           filesImg <- getDataFileName "img/files.png"
           pdp7 <- getDataFileName "img/pdp7_3.png"
           let images = [folderImg,filesImg,pdp7]
-          defaultMain (unixPoster images)
+          mainWith (unixPoster images :: Diagram B)
 
 --------------------------------------------------
 -- basic building blocks of the diagram
@@ -69,12 +71,12 @@ unixPoster images
 -- connections = {-# SCC "connections" #-}
 
 poster_body [folder,fil,pdp7] = ((input folder fil) ||| strutX 3 ||| commandBodyL) |||
-                (  (output ||| strutX 5 ||| commandBodyM ||| redirection ||| commandBodyR ||| strutX 3)
+                (  (outp ||| strutX 5 ||| commandBodyM ||| redirection ||| commandBodyR ||| strutX 3)
                    ===
                    (scriptingV ||| strutX 3 ||| dollarOps ||| strutX 3 ||| (files pdp7))
                 )
 
-poster_portrait [folder,fil,pdp7] = ((input folder fil) ||| strutX 3 ||| ( (commandBodyL ||| (output 
+poster_portrait [folder,fil,pdp7] = ((input folder fil) ||| strutX 3 ||| ( (commandBodyL ||| (outp
                                                                === strutY 2 ===
                                                                redirection))
                                             ===
@@ -124,7 +126,7 @@ pipingExample (from, to)
             ~~~ fromMaybe origin (traceP (location cb) unitX cb) # lc silver)
 
 -- connect two points with a bezier curve horizontally
-p1 ~~~ p2 = (stroke $ translate (p1 .-. origin) $ pathFromTrail segs) # lw 0.4
+p1 ~~~ p2 = (stroke $ translate (p1 .-. origin) $ pathFromTrail segs) # lwL 0.4
   where c1 = p1 .+^ (r2 (3,0))
         c2 = p2 .+^ (r2 (-3,0))
         segs = fromSegments [bezier3 (c1 .-. p1) (c2 .-. p1) (p2 .-. p1)]
@@ -154,9 +156,9 @@ input folderImg filesImg = (strutY 15
     files = textLin "Files" 3 black # alignBR
     h = textLin "Two Files" 3 black # alignBR
 
-folderPic f = image f 10 10 # centerXY -- unsafePerformIO . getDataFileName
+folderPic f = mempty -- image f 10 10 # centerXY
 inputRedirection = textBox ["InputRedirection"] 2 white red 0.3 # centerXY
-filesPic f = image f 10 10 # centerXY
+filesPic f = mempty -- image f 10 10 # centerXY
 
 linesIcon = textBox ["------","------","------","------"] 1 white blue 0.3
 twoFilesIcon = linesIcon ||| strutX 1 ||| linesIcon
@@ -175,7 +177,7 @@ fileSystem = {-# SCC "fileSystem" #-} groupedCommands "File System" 120 230
       unix_touch, unix_rm, unix_ln, unix_stat, unix_cmp, unix_diff, unix_df, unix_du -- , unix_quota # named "quota"
      ]
 
-output = ( i # centerXY
+outp = ( i # centerXY
            === strutY 2 ===
            piping # centerXY # named "piping"
            === strutY 4 ===
@@ -275,7 +277,7 @@ scriptingH = (header === strutY 3 === (scripting0
 files i = strutX 2 ||| (header === strutY 3 === (((drawTreeDiagram (fileSystemTree2 blue)) # centerXY) `atop` im)) # alignTL
   where
     header = textLin "Files and Directories" 5 black # centerXY
-    im = image i 90 70 # centerXY
+    im = mempty -- image i 90 70 # centerXY
 
 
 redir = textBoxWithHeader
@@ -435,7 +437,7 @@ groupedCommands txt w h commands = (((header # centerXY === strutY 5 === command
   where
     -- placing commands below each other
     header = textLin txt 5 black # alignBL
-    commandRows = (vcat' with { sep = 1 } commands) # alignTL
+    commandRows = vcat' (with & sep .~ 1) commands # alignTL
     roundedBox = (roundedRect width hhh 2) # alignTL # fc grey # lc grey # opacity 0.2
     width = w -- Size.width  (placedCommands :: D R2)
     hhh = h -- Size.height (placedCommands :: D R2)
@@ -462,16 +464,15 @@ commandVerticalOptions c d ops = commandVBox c d (map vOptAndOutput ops)
 
 commandDescriptionExample c d lines = c ||| d ||| (terminal lines 1.5)
 
-commandBox :: Diagram b R2 -> Diagram b R2 -> [Diagram b R2] -> Diagram b R2
+-- commandBox :: Diagram b -> Diagram b -> [Diagram b] -> Diagram b
 commandBox c d opts = (c ||| d) === placedOptions # fc red # lc red
   where
-    placedOptions = hcat' with { sep = 0.5 } opts
-    
+    placedOptions = hcat' (with & sep .~ 0.5) opts
 
-commandVBox :: Diagram b R2 -> Diagram b R2 -> [Diagram b R2] -> Diagram b R2
+-- commandVBox :: V b ~ V2 => Diagram b -> Diagram b -> [Diagram b] -> Diagram b
 commandVBox c d opts = (c ||| d) === placedOptions # fc red # lc red
   where
-    placedOptions = vcat' with { sep = 0.5} opts
+    placedOptions = vcat' (with & sep .~ 0.5) opts
 
 -- textbox with example code below the option
 optAndOutput (opt,lines) | (length lines) <= 3 = strutX 1 ||| (opt === (terminal lines 1.5)) # centerXY # pad 1.02 # alignTL
@@ -480,9 +481,9 @@ optAndOutput (opt,lines) | (length lines) <= 3 = strutX 1 ||| (opt === (terminal
 vOptAndOutput (opt,lines) | (length lines) <= 3 = strutX 1 ||| (opt ||| ((terminal lines 1.5) # alignTL ) ) # alignTL
                           | otherwise           = strutX 1 ||| (opt ||| ((terminal lines 1) # alignTL ) ) # alignTL
 
-fancyRoundedBox w h hh c = ( (roundedRect (w-0.4-size*0.04) (hh-0.4-size*0.04) (h/5)) # centerXY # lw 0 # fc (blend 0.5 c white)
+fancyRoundedBox w h hh c = ( (roundedRect (w-0.4-size*0.04) (hh-0.4-size*0.04) (h/5)) # centerXY # lwL 0 # fc (blend 0.5 c white)
                            `atop`
-                             (roundedRect w hh (h/5))          # centerXY # lw 0 # fc (blend 0.5 c black) ) # alignTL # opacity 0.7
+                             (roundedRect w hh (h/5))          # centerXY # lwL 0 # fc (blend 0.5 c black) ) # alignTL # opacity 0.7
   where size | w > hh    = hh
              | otherwise = w
 
@@ -497,47 +498,47 @@ border hrel w h obj | w > len && h > len = obj # scaleX ((w-len)/w)
 terminal lines h = (border 0.3 w hh placedTextLines) `atop` roundedBox
   where
     -- placing textLines below each other
-    placedTextLines = vcat' with { sep = h/5 } textLines # alignTL # lc white # fc white
+    placedTextLines = vcat' (with & sep .~ h/5) textLines # alignTL # lc white # fc white
     textLines = map (\t -> (textBit t h white) # alignTL) lines
     roundedBox = (roundedRect w hh 0.5) # alignTL # lc black # fc black -- # opacity 0.5
-    w = Size.width  (placedTextLines :: D R2)
-    hh = Size.height (placedTextLines :: D R2)
+    w = Size.width  (placedTextLines :: D V2 Double)
+    hh = Size.height (placedTextLines :: D V2 Double)
 
 textBox lines h c0 c1 b = (border b w hh placedTextLines) `atop` roundedBox
   where
     -- placing textLines below each other
-    placedTextLines = vcat' with { sep = h/5 } textLines # alignTL
+    placedTextLines = vcat' (with & sep .~ h/5) textLines # alignTL
     textLines = map (\t -> (textBit t h c0) # alignTL) lines
     roundedBox = fancyRoundedBox w h hh c1
-    w = Size.width  (placedTextLines :: D R2)
-    hh = Size.height (placedTextLines :: D R2)
+    w = Size.width  (placedTextLines :: D V2 Double)
+    hh = Size.height (placedTextLines :: D V2 Double)
 
 textBox2 lines h c0 c1 = (border 0.3 w hh placedTextLines) `atop` roundedBox
   where
     -- placing textLines below each other
-    placedTextLines = vcat' with { sep = h/5 } textLines # alignTL
+    placedTextLines = vcat' (with & sep .~ h/5) textLines # alignTL
     textLines = map (\t -> (textLin t h c0) # alignTL) lines
     roundedBox = fancyRoundedBox w h hh c1
-    w = Size.width  (placedTextLines :: D R2)
-    hh = Size.height (placedTextLines :: D R2)
+    w = Size.width  (placedTextLines :: D V2 Double)
+    hh = Size.height (placedTextLines :: D V2 Double)
 
 
 textBoxWithHeader line lines h c0 c1 = (border 0.3 w hh placedTextLines) `atop` roundedBox
   where
     -- placing textLines below each other
-    placedTextLines = ((textBit line h black # centerXY) === (vcat' with { sep = h/5 } textLines # centerXY)) # alignTL
+    placedTextLines = ((textBit line h black # centerXY) === (vcat' (with & sep .~ h/5) textLines # centerXY)) # alignTL
     textLines = map (\t -> (textBit t h c0) # alignTL) lines
     roundedBox = fancyRoundedBox w h hh c1
-    w = Size.width  (placedTextLines :: D R2)
-    hh = Size.height (placedTextLines :: D R2)
+    w = Size.width  (placedTextLines :: D V2 Double)
+    hh = Size.height (placedTextLines :: D V2 Double)
 
 
 highlightedText code h c lang = (border 0.15 w hh placedTextLines) `atop` roundedBox
   where
     -- placing textLines below each other
-    placedTextLines = vcat' with { sep = h/5 } textLines # alignTL
+    placedTextLines = vcat' (with & sep .~ h/5) textLines # alignTL
     textLines = map l hlines # alignTL
-    l line = hcat' with { sep = 0.1 } (map token line)
+    l line = hcat' (with & sep .~ 0.1) (map token line)
     token (CommentTok,str)  = textBit str h blue # fc blue # alignBR
     token (KeywordTok,str)  = textBit str h red # fc blue # alignBR
     token (FloatTok,str)    = textBit str h orange # fc blue # alignBR
@@ -546,16 +547,18 @@ highlightedText code h c lang = (border 0.15 w hh placedTextLines) `atop` rounde
     token (FunctionTok,str) = textBit str h black # fc blue # alignBR
     token (_,str)            = textBit str h grey # fc blue # alignBR
     roundedBox = (roundedRect w hh (h/5)) # alignTL # opacity 0.3
-    w = Size.width  (placedTextLines :: D R2)
-    hh = Size.height (placedTextLines :: D R2)
+    w = Size.width  (placedTextLines :: D V2 Double)
+    hh = Size.height (placedTextLines :: D V2 Double)
     hlines :: [SourceLine]
     hlines = map concat $ map (highlightAs lang) code
 
 textBit t h c | null t = mempty
-              | otherwise = {-# SCC "textBit" #-} textSVG_ (TextOpts t bit INSIDE_H HADV False 1 h) # fc c # lc c # fillRule EvenOdd
+              | otherwise = {-# SCC "textBit" #-} textSVG_ (TextOpts bit INSIDE_H HADV False 1 h) t # fc c # lc c
+                                                                                                    # lwL 0.1 # fillRule EvenOdd
 
 textLin t h c | null t = mempty
-              | otherwise = {-# SCC "textLin" #-} textSVG_ (TextOpts t lin INSIDE_H HADV False 1 h) # fc c # lc c # fillRule EvenOdd
+              | otherwise = {-# SCC "textLin" #-} textSVG_ (TextOpts lin INSIDE_H HADV False 1 h) t # fc c # lc c
+                                                                                                    # lwL 0.1 # fillRule EvenOdd
 
 ----------------------------------------------------------------------------------------------------------
 -- detailed content, generated with the helper functions
@@ -1406,8 +1409,8 @@ fileSystemTree2 c =
   ]
 
 -- | Neat 2-dimensional drawing of a tree (from Data.Tree)
-drawTreeDiagram tree = vcat' with {sep = 0} $
-        map (hcat' with {sep = 0.5}) $
+drawTreeDiagram tree = vcat' (with & sep .~ 0) $
+        map (hcat' (with & catMethod .~ Distrib & sep .~ 0.5)) $
         map (map (\(str,c) -> (textBit str 1.5 c # alignTL))) $ drawDiagram tree
 
 -- drawDiagram :: Tree [(String,a)] -> [[(String,a)]]
