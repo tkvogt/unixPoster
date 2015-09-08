@@ -20,13 +20,23 @@ import Text.Highlighting.Kate
 import Data.Tree
 import Data.Colour hiding (atop)
 import Data.Maybe
-import Paths_unixPoster(getDataFileName)
+-- import Paths_unixPoster(getDataFileName)
+import Data.Either
 
-main = do folderImg <- getDataFileName "img/folder.png"
-          filesImg <- getDataFileName "img/files.png"
-          pdp7 <- getDataFileName "img/pdp7_3.png"
-          let images = [folderImg,filesImg,pdp7]
-          mainWith (unixPoster images :: Diagram B)
+main = do possibleImages <- mapM loadImageExt getImagePaths
+          let loadedImages = rights possibleImages 
+          let diagramImages = map imageToDiagram loadedImages
+          let diagram = unixPoster diagramImages
+          mainWith (diagram)
+
+getDataFileName :: FilePath -> FilePath
+getDataFileName name = "/Users/nickager/tlcposter2/img/" ++ name ++ ".png"
+
+getImagePaths :: [FilePath]
+getImagePaths = map getDataFileName ["folder",  "files", "pdp7_3"]
+
+imageToDiagram :: DImage Double External -> QDiagram Cairo V2 Double Any
+imageToDiagram imageData = image imageData
 
 --------------------------------------------------
 -- basic building blocks of the diagram
@@ -156,9 +166,9 @@ input folderImg filesImg = (strutY 15
     files = textLin "Files" 3 black # alignBR
     h = textLin "Two Files" 3 black # alignBR
 
-folderPic f = mempty -- image f 10 10 # centerXY
+folderPic f = f # scaleUToX 10
 inputRedirection = textBox ["InputRedirection"] 2 white red 0.3 # centerXY
-filesPic f = mempty -- image f 10 10 # centerXY
+filesPic f = f  # scaleUToX 10
 
 linesIcon = textBox ["------","------","------","------"] 1 white blue 0.3
 twoFilesIcon = linesIcon ||| strutX 1 ||| linesIcon
@@ -277,7 +287,7 @@ scriptingH = (header === strutY 3 === (scripting0
 files i = strutX 2 ||| (header === strutY 3 === (((drawTreeDiagram (fileSystemTree2 blue)) # centerXY) `atop` im)) # alignTL
   where
     header = textLin "Files and Directories" 5 black # centerXY
-    im = mempty -- image i 90 70 # centerXY
+    im = i # scaleUToX 90
 
 
 redir = textBoxWithHeader
