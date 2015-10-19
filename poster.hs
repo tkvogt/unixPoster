@@ -20,20 +20,19 @@ import Text.Highlighting.Kate
 import Data.Tree
 import Data.Colour hiding (atop)
 import Data.Maybe
--- import Paths_unixPoster(getDataFileName)
+import Paths_unixPoster(getDataFileName)
 import Data.Either
 
-main = do possibleImages <- mapM loadImageExt getImagePaths
-          let loadedImages = rights possibleImages
-          let diagramImages = map imageToDiagram loadedImages
-          let diagram = unixPoster diagramImages
-          mainWith diagram
-
-getDataFileName :: FilePath -> FilePath
-getDataFileName name = "/Users/nickager/tlcposter2/img/" ++ name ++ ".png"
-
-getImagePaths :: [FilePath]
-getImagePaths = map getDataFileName ["folder",  "files", "pdp7_3"]
+main = do 
+    folderImg <- getDataFileName "img/folder.png"
+    filesImg <- getDataFileName "img/files.png"
+    pdp7 <- getDataFileName "img/pdp7_3.png"
+    let imagePaths = [folderImg,filesImg,pdp7]
+    possibleImages <- mapM loadImageExt imagePaths      
+    let loadedImages = rights possibleImages
+    let diagramImages = map imageToDiagram loadedImages
+    let diagram = unixPoster diagramImages
+    mainWith diagram
 
 imageToDiagram :: DImage Double External -> QDiagram Cairo V2 Double Any
 imageToDiagram imageData = image imageData
