@@ -24,10 +24,10 @@ import Data.Maybe
 import Data.Either
 
 main = do possibleImages <- mapM loadImageExt getImagePaths
-          let loadedImages = rights possibleImages 
+          let loadedImages = rights possibleImages
           let diagramImages = map imageToDiagram loadedImages
           let diagram = unixPoster diagramImages
-          mainWith (diagram)
+          mainWith diagram
 
 getDataFileName :: FilePath -> FilePath
 getDataFileName name = "/Users/nickager/tlcposter2/img/" ++ name ++ ".png"
@@ -156,7 +156,7 @@ input folderImg filesImg = (strutY 15
          ===
          filesPic filesImg # named "files"
          === strutY 33 ===
-         h # centerXY 
+         h # centerXY
          === strutY 2 ===
          twoFilesIcon # named "twoFiles" # centerXY
          ) # alignTL
@@ -220,7 +220,7 @@ commandBodyM = lineProcessing # alignTL
 
 lineProcessing = groupedCommands "Processing of Lines" 95 160
       [unix_rev, unix_wc, unix_cut, unix_grep, unix_tee,
-       unix_head ||| strutX 1 ||| unix_tail, 
+       unix_head ||| strutX 1 ||| unix_tail,
        unix_more, unix_less, unix_sort, unix_uniq, unix_tr
       ]
 
@@ -251,11 +251,11 @@ processes = groupedCommands "Processes and OS" 95 150
        unix_date ||| strutX 1 ||| unix_cal    ||| strutX 1 ||| unix_free ||| strutX 1 ||| unix_uptime ||| strutX 1 ||| unix_clear,
        unix__exit ||| unix_sleep, unix_history]
 
-copyright = -- (textBit "\x00a9" 6 black # alignBR) ||| strutX 2 ||| 
+copyright = -- (textBit "\x00a9" 6 black # alignBR) ||| strutX 2 |||
             (textLin "Generated with the Haskell diagrams library" 4 black)
 
 
-scriptingV = (header === strutY 1 === ((scripting0 
+scriptingV = (header === strutY 1 === ((scripting0
                                         ===
                                         strutY 1
                                         ===
@@ -386,7 +386,7 @@ piping_Example0 = textBoxWithHeader
 
 piping_Example1 = textBoxWithHeader
   "ps -e | head"
-  ["displays the first 10 lines", 
+  ["displays the first 10 lines",
    "of the table that shows all",
    "processes"
   ] 2 white grey # alignTL
@@ -412,7 +412,7 @@ piping_Example4 = textBoxWithHeader
 
 piping_Example5 = textBoxWithHeader
   "ps -e | less"
-  ["displays the table that shows", 
+  ["displays the table that shows",
    "all processes in a scrollable",
    "view"
   ] 2 white grey # alignTL
@@ -452,7 +452,7 @@ groupedCommands txt w h commands = (((header # centerXY === strutY 5 === command
     width = w -- Size.width  (placedCommands :: D R2)
     hhh = h -- Size.height (placedCommands :: D R2)
 
-command t = textBox [t] 2 black red 0.3 # centerXY # named t # alignTL 
+command t = textBox [t] 2 black red 0.3 # centerXY # named t # alignTL
 
 description t | null t = mempty
               | otherwise = textBox2 t 2 black blue # alignTL
@@ -901,7 +901,7 @@ unix_cut = commandVerticalOptions (command "cut") (description ["selects and dis
       "Gordon Brown|2007",
       "David Cameron|2010"]),
     (c_option "cut -f1,3 -d \"|\" --output-delimiter=\"; \" PrimeMinisters"
-  "selects 1st and 3rd field of every line in file \"PrimeMinisters\", interpreting '|' as field delimiter and replacing it by '; ' for the output",   
+  "selects 1st and 3rd field of every line in file \"PrimeMinisters\", interpreting '|' as field delimiter and replacing it by '; ' for the output",
      [--"Maggie Thatcher; Tories",
       --"John Major; Tories",
       "Tony Blair; Labour",
@@ -985,7 +985,7 @@ unix_sort = commandVerticalOptions (command "sort") (description ["prints sorted
                 "106.5$/bbl.     Oil",
                 "27.5$/oz.       Silver"]) ]
 
-unix_uniq = commandVerticalOptions (command "uniq") 
+unix_uniq = commandVerticalOptions (command "uniq")
                                    (description ["prints lines to stdout omitting those who are copies of their predecessor"])
   [ (c_option "uniq USPresidentialElectionWinners" "prints lines of file \"USPresidentialElectionWinners\" to stdout omitting repetitions",
      ["George Bush",
@@ -1020,7 +1020,7 @@ unix_less = commandWOptions [command "less"] [description "prints a file's conte
 --    (c_option "-E" "makes 'less' exit the first time that end-of-file is reached", ["???"]) ]
 
 
-unix_sort = commandVerticalOptions [command "sort"] [description "prints sorted file contents to stdout"] 
+unix_sort = commandVerticalOptions [command "sort"] [description "prints sorted file contents to stdout"]
  [ (c_option "-n" "sorts numerically",["???"]),
    (c_option "-r" "sorts in reverse order", ["???"]),
    (c_option "-b" "leading blanks are ignored", ["???"]),
@@ -1433,4 +1433,3 @@ drawDiagram (Node x ts0) = x : drawSubTrees ts0
       [("|",black)] : shift [("+- ",black)] [("|  ",black)] (drawDiagram t) ++ drawSubTrees ts
 
     shift first other = zipWith (++) (first : repeat other)
-
